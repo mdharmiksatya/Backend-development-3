@@ -277,6 +277,14 @@ For permanent production persistence with SQLite on Render:
    If `DATABASE_PATH` points to `/var/data/books.db`, all book records, inserts, updates, and deletions permanently survive across all redeployments and container restarts.
 4. If no `DATABASE_PATH` is specified, the application falls back safely to `./database/books.db`.
 
+### Render Deployment Configuration & GLIBC Fix
+- **Node.js Runtime Pinning**: The project includes a `.node-version` file specifying `22.22.0` and `package.json` `"engines": { "node": "22.22.0" }`. Render reads this to guarantee the runtime is Node.js 22.22.0.
+- **GLIBC Compatibility (`GLIBC_2.38 not found`)**:
+  Precompiled binaries of `sqlite3` for linux-x64 can be linked against GLIBC 2.38, which is newer than the GLIBC version installed in Render's container base image. To resolve this:
+  - **Build Command in Render**: `npm install --build-from-source` (or `npm run build`)
+  - **Automated Postinstall**: `package.json` includes a platform-aware rebuild step that compiles `sqlite3` directly from source on Linux environments using the host's native C++ compiler and local GLIBC.
+- **Start Command**: `npm start`
+
 ### Idempotent Database Bootstrapping
 On startup, `initializeDB()` checks:
 ```javascript
